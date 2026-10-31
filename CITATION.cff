@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "Jika Anda menggunakan perangkat lunak atau merujuk riset ini, silakan sitasi sebagai berikut."
+authors:
+  - family-names: "Tiartanto"
+    given-names: "Nugi"
+    affiliation: "Informatics Student & Software Creator"
+title: "Rancang Bangun dan Analisis Kinerja Aplikasi Desktop Batch Image Resizing dan Upscaling Berbasis Multi-Threading dan Engine ImageMagick CLI"
+version: 1.0.0
+doi: 10.5281/zenodo.23833914
+date-released: 2026-10-31
+url: "https://github.com/nugitiar/batch-image-resizer"
+license: "CC-BY-4.0"
+keywords:
+  - "batch processing"
+  - "imagemagick"
+  - "python"
+  - "multi-threading"
+  - "customtkinter"
+  - "software engineering"
+  - "cross-platform"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Tiartanto"
+      given-names: "Nugi"
+  title: "Rancang Bangun dan Analisis Kinerja Aplikasi Desktop Batch Image Resizing dan Upscaling Berbasis Multi-Threading dan Engine ImageMagick CLI"
+  year: 2026
+  month: 10
+  doi: 10.5281/zenodo.23833914
+  url: "https://doi.org/10.5281/zenodo.23833914"
+  publisher: "Zenodo"

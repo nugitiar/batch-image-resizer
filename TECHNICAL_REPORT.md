@@ -6,6 +6,8 @@ GitHub: [@nugitiar](https://github.com/nugitiar) | Email/Contact: via GitHub Pro
 Repository: [https://github.com/nugitiar/batch-image-resizer](https://github.com/nugitiar/batch-image-resizer)  
 
 **Dokumen Publikasi Ilmiah & Catatan Teknis (Technical Report)**  
+DOI: [10.5281/zenodo.23833914](https://doi.org/10.5281/zenodo.23833914)  
+Arsip Resmi Zenodo: [https://doi.org/10.5281/zenodo.23833914](https://doi.org/10.5281/zenodo.23833914)  
 Lisensi: Open Access di bawah [Creative Commons Attribution 4.0 International (CC-BY-4.0)](https://creativecommons.org/licenses/by/4.0/)  
 Hak Cipta © 2026 Nugi Tiartanto. All rights reserved.
 
@@ -230,6 +232,7 @@ Salin informasi di bawah ini langsung ke formulir setoran (*Upload Form*) di [Ze
 
 | Parameter Formulir Zenodo | Nilai Isian (Copy-Paste Ready) |
 | :--- | :--- |
+| **DOI Resmi (Permanent Link)** | **[10.5281/zenodo.23833914](https://doi.org/10.5281/zenodo.23833914)** |
 | **Resource Type / Upload Type** | **Publication** $\rightarrow$ **Technical Note** (atau **Preprint** / **Report**) |
 | **Publication Date** | `2026-10-31` (atau tanggal hari ini) |
 | **Title** | `Rancang Bangun dan Analisis Kinerja Aplikasi Desktop Batch Image Resizing dan Upscaling Berbasis Multi-Threading dan Engine ImageMagick CLI` |
