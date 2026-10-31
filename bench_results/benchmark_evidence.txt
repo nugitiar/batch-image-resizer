@@ -1,0 +1,31 @@
+============================================================================
+BENCHMARK EVIDENCE LOG — BATCH IMAGE RESIZER
+============================================================================
+Date & Time:       2026-10-31 01:05:53
+Author / Creator:  Nugi Tiartanto (@nugitiar)
+Repository:        https://github.com/nugitiar/batch-image-resizer
+Operating System:  Darwin 27.0.0 (arm64)
+Processor / Cores: arm (8 CPU Cores)
+ImageMagick Path:  /opt/homebrew/bin/magick (v7.1.2-34)
+Dataset Location:  /Users/cx777/.gemini/antigravity/scratch/batch-image-resizer/bench_dataset
+Parameters:        Scale 2x (200%), Aspect Ratio 1:1, Filter Lanczos, JPEG Quality 92
+============================================================================
+
+RANGKUMAN HASIL PENGUJIAN EMPIRIS NYATA (WALL-CLOCK TIME):
+----------------------------------------------------------------------------
+Batch Size   | Single-Thread (1w) | Multi-Thread (4w)  | Multi-Thread (8w) 
+----------------------------------------------------------------------------
+10 Citra     |   7.21s (1.00x)     |   2.73s (2.64x)     |   5.19s (1.39x)
+50 Citra     |  33.41s (1.00x)     |  11.68s (2.86x)     |  11.86s (2.82x)
+----------------------------------------------------------------------------
+
+DETAIL LENGKAP PENGUJIAN 50 CITRA:
+• Single-Thread (1 Worker) : 33.41 detik (Baseline 1.00x)
+• Multi-Thread  (2 Workers): 18.10 detik (Speedup: 1.85x | Efisiensi: 92.3%)
+• Multi-Thread  (4 Workers): 11.68 detik (Speedup: 2.86x | Efisiensi: 71.5%)
+• Multi-Thread  (8 Workers): 11.86 detik (Speedup: 2.82x | Efisiensi: 35.2%)
+
+KONSISTENSI & VALIDASI:
+• Semua 50 berkas citra berhasil diproses 100% tanpa error.
+• Penggunaan ThreadPoolExecutor menghasilkan reduksi waktu komputasi nyata.
+• Bukti ini diarsipkan secara resmi untuk keperluan publikasi ilmiah di Zenodo.
