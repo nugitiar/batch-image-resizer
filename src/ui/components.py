@@ -1,7 +1,7 @@
 """Reusable CustomTkinter UI components for Windows, macOS, and Linux.
 
 Author: Nugi Tiartanto (@nugitiar)
-Role:   Informatics Student & Independent Software Developer
+Role:   Informatics Student & Software Creator
 GitHub: https://github.com/nugitiar
 """
 

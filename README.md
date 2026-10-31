@@ -14,9 +14,8 @@ Engineered with asynchronous multi-threading, modern Dark/Light mode customizati
 
 ## 👨‍💻 Author & Maintainer
 
-- **Developer**: **Nugi Tiartanto**
-- **GitHub**: [@nugitiar](https://github.com/nugitiar)
-- **Role**: Informatics Student & Independent Software Developer
+- **Name**: **Nugi Tiartanto** ([@nugitiar](https://github.com/nugitiar))
+- **Role**: Informatics Student & Software Creator
 - **Project Repository**: [`batch-image-resizer`](https://github.com/nugitiar/batch-image-resizer)
 
 ---
@@ -211,5 +210,5 @@ batch-image-resizer/
 
 **Copyright © 2026 Nugi Tiartanto ([@nugitiar](https://github.com/nugitiar)). All rights reserved.**
 
-Developed with precision by **Nugi Tiartanto**, Informatics Student & Independent Software Developer.
+Developed with precision by **Nugi Tiartanto**, Informatics Student & Software Creator.
 See the [Distribution Notice](#-distribution-notice--limited-binary-access) for pre-compiled binary distribution terms.

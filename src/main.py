@@ -4,7 +4,7 @@ Automates batch image upscaling, aspect ratio center-cropping, and quality resam
 on macOS, Windows, and Linux.
 
 Author: Nugi Tiartanto (@nugitiar)
-Role:   Informatics Student & Independent Software Developer
+Role:   Informatics Student & Software Creator
 GitHub: https://github.com/nugitiar
 """
 

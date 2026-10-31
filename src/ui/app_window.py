@@ -6,7 +6,7 @@ real-time progress feedback, thread-safe asynchronous execution, and logging
 across macOS, Windows, and Linux.
 
 Author: Nugi Tiartanto (@nugitiar)
-Role:   Informatics Student & Independent Software Developer
+Role:   Informatics Student & Software Creator
 GitHub: https://github.com/nugitiar
 """
 
