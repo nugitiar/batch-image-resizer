@@ -1,0 +1,7 @@
+# Core GUI and Image Processing dependencies
+customtkinter>=5.2.0
+tkinterdnd2>=0.4.0
+Pillow>=10.0.0
+
+# Packaging for macOS Apple Silicon
+pyinstaller>=6.5.0

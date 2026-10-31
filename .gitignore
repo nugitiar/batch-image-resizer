@@ -1,0 +1,27 @@
+# Operating System Artifacts
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Python Compilation & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Build & Distribution Artifacts
+build/
+dist/
+.pyinstaller_cache/
+*.spec.bak
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
