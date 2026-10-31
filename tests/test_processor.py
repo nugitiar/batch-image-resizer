@@ -152,5 +152,36 @@ class TestEndToEndExecution(unittest.TestCase):
         self.assertGreater(result.execution_time_seconds, 0.0)
 
 
+class TestCrossPlatformSupport(unittest.TestCase):
+    """Verifies cross-platform detection and path handling for Windows, macOS, and Linux."""
+
+    def test_detector_install_hints_per_os(self):
+        detector = ImageMagickDetector()
+
+        # Test macOS hint
+        detector.system = "Darwin"
+        hint_mac = detector._get_install_hint()
+        self.assertIn("brew install", hint_mac)
+
+        # Test Windows hint
+        detector.system = "Windows"
+        hint_win = detector._get_install_hint()
+        self.assertIn("winget install", hint_win)
+
+        # Test Linux hint
+        detector.system = "Linux"
+        hint_linux = detector._get_install_hint()
+        self.assertIn("apt install", hint_linux)
+        self.assertIn("pacman -S", hint_linux)
+
+    def test_subprocess_extra_kwargs_type(self):
+        detector = ImageMagickDetector()
+        info = detector.get_info()
+        if info.is_available:
+            processor = ImageProcessor(info)
+            kwargs = processor._get_subprocess_extra_kwargs()
+            self.assertIsInstance(kwargs, dict)
+
+
 if __name__ == "__main__":
     unittest.main()

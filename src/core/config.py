@@ -1,7 +1,11 @@
 """Application configuration, constants, and data models.
 
 Defines supported image formats, aspect ratios, scale multipliers,
-resize filters, and dataclasses used across the app.
+resize filters, and dataclasses used across Windows, macOS, and Linux.
+
+Author: Nugi Tiartanto (@nugitiar)
+Role:   Informatics Student & Independent Software Developer
+GitHub: https://github.com/nugitiar
 """
 
 from dataclasses import dataclass, field

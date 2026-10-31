@@ -1,13 +1,16 @@
-"""Image processing engine using ImageMagick CLI.
+"""Cross-Platform Image processing engine using ImageMagick CLI.
 
-Handles dimension probing, aspect ratio crop calculations,
-filter selection, scaling, and safe subprocess execution.
+Handles dimension probing, aspect ratio crop calculations, filter selection,
+scaling, and safe subprocess execution across Windows, macOS, and Linux.
+
+Author: Nugi Tiartanto (@nugitiar)
 """
 
 from dataclasses import dataclass
 import os
 from pathlib import Path
 import subprocess
+import sys
 import time
 from typing import List, Optional, Tuple
 
@@ -30,6 +33,16 @@ class ImageProcessor:
         self.magick_path: Path = magick_info.binary_path
         self.is_im7: bool = magick_info.is_imagemagick_7
 
+    def _get_subprocess_extra_kwargs(self) -> dict:
+        """Returns platform-specific subprocess creation flags.
+
+        On Windows: sets CREATE_NO_WINDOW to eliminate command prompt flashing during batch runs.
+        """
+        extra = {}
+        if sys.platform == "win32":
+            extra["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+        return extra
+
     def get_image_dimensions(self, image_path: Path) -> Tuple[int, int]:
         """Probes the pixel width and height of an image file.
 
@@ -41,8 +54,8 @@ class ImageProcessor:
             cmd = [str(self.magick_path), "identify", "-format", "%w %h", target_spec]
         else:
             # Legacy ImageMagick 6 fallback
-            identify_bin = self.magick_path.parent / "identify"
-            if identify_bin.is_file() and os.access(identify_bin, os.X_OK):
+            identify_bin = self.magick_path.parent / ("identify.exe" if sys.platform == "win32" else "identify")
+            if identify_bin.is_file() and (sys.platform == "win32" or os.access(identify_bin, os.X_OK)):
                 cmd = [str(identify_bin), "-format", "%w %h", target_spec]
             else:
                 cmd = [str(self.magick_path), "-format", "%w %h", target_spec]
@@ -54,6 +67,7 @@ class ImageProcessor:
                 text=True,
                 check=True,
                 timeout=15.0,
+                **self._get_subprocess_extra_kwargs(),
             )
             output = result.stdout.strip()
             parts = output.split()
@@ -149,9 +163,6 @@ class ImageProcessor:
                 "-filter", filter_opt.filter_name,
                 "-resize", f"{int(round(scale.multiplier * 100))}%",
             ])
-        elif needs_crop:
-            # Even at 1x, if cropped, we can specify filter or keep repage
-            pass
 
         # 3. Compression / Quality for Lossy Formats
         target_ext = output_path.suffix.lower()
@@ -250,6 +261,7 @@ class ImageProcessor:
                 text=True,
                 check=True,
                 timeout=120.0,
+                **self._get_subprocess_extra_kwargs(),
             )
 
             elapsed = time.perf_counter() - start_time

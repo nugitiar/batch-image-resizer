@@ -1,7 +1,12 @@
 """Threaded batch worker engine for concurrent image processing.
 
 Provides non-blocking execution using concurrent.futures.ThreadPoolExecutor,
-safe cancellation, and granular real-time event callbacks for the UI.
+safe cancellation, and granular real-time event callbacks for the UI
+across Windows, macOS, and Linux.
+
+Author: Nugi Tiartanto (@nugitiar)
+Role:   Informatics Student & Independent Software Developer
+GitHub: https://github.com/nugitiar
 """
 
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed

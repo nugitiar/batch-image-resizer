@@ -1,11 +1,14 @@
-"""Drag-and-Drop integration for CustomTkinter on macOS.
+"""Cross-Platform Drag-and-Drop integration for CustomTkinter (macOS, Windows, Linux).
 
 Integrates tkinterdnd2 with CustomTkinter windows with robust fallback
-if native TkinterDnD tcl libraries are unavailable on the system.
+if native TkinterDnD tcl libraries are unavailable on the host system.
+
+Author: Nugi Tiartanto (@nugitiar)
 """
 
 from pathlib import Path
 import re
+import sys
 from typing import Callable, List, Optional
 import urllib.parse
 
@@ -14,8 +17,8 @@ def parse_dropped_paths(raw_data: str) -> List[Path]:
     """Parses raw drag-and-drop string into normalized Path objects.
 
     Handles:
-    - Curly brace quoted paths from TkinterDnD: {/Path With Spaces/file.png}
-    - file:// URL scheme strings
+    - Curly brace quoted paths from TkinterDnD: {C:\Path With Spaces\file.png}
+    - file:// URL scheme strings on Linux, macOS, and Windows
     - Space-separated unquoted paths
     """
     paths: List[Path] = []
@@ -33,7 +36,11 @@ def parse_dropped_paths(raw_data: str) -> List[Path]:
 
         # Convert file:// URL scheme if present
         if token.startswith("file://"):
-            token = urllib.parse.unquote(urllib.parse.urlparse(token).path)
+            parsed_path = urllib.parse.unquote(urllib.parse.urlparse(token).path)
+            # On Windows, urlparse('/C:/...') has a leading slash before drive letter
+            if sys.platform == "win32" and parsed_path.startswith("/") and len(parsed_path) > 2 and parsed_path[2] == ":":
+                parsed_path = parsed_path[1:]
+            token = parsed_path
 
         p = Path(token).expanduser().resolve()
         if p.exists():

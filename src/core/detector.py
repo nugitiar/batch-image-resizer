@@ -1,10 +1,13 @@
-"""ImageMagick detection engine for macOS (Apple Silicon / Intel).
+"""Cross-Platform ImageMagick Detection Engine (macOS, Windows, Linux).
 
-Automatically locates and validates the ImageMagick binary (magick / convert)
-prioritizing Homebrew on Apple Silicon (/opt/homebrew/bin/magick).
+Automatically locates and validates the ImageMagick binary ('magick', 'magick.exe', or 'convert')
+with platform-specific search paths and non-intrusive subprocess execution.
+
+Author: Nugi Tiartanto (@nugitiar)
 """
 
 from dataclasses import dataclass, field
+import glob
 import os
 from pathlib import Path
 import platform
@@ -21,6 +24,7 @@ class ImageMagickInfo:
     version_string: Optional[str] = None
     major_version: int = 0
     architecture: Optional[str] = None
+    os_name: str = "Unknown"
     is_arm64: bool = False
     supported_delegates: List[str] = field(default_factory=list)
     error_message: Optional[str] = None
@@ -31,27 +35,12 @@ class ImageMagickInfo:
 
 
 class ImageMagickDetector:
-    """Detects and inspects system ImageMagick installation on macOS."""
-
-    # Prioritized binary paths on macOS
-    CANDIDATE_PATHS: Tuple[str, ...] = (
-        # Apple Silicon Homebrew (canonical arm64 location)
-        "/opt/homebrew/bin/magick",
-        "/opt/homebrew/bin/convert",
-        # Custom user / local bin
-        os.path.expanduser("~/homebrew/bin/magick"),
-        os.path.expanduser("~/.homebrew/bin/magick"),
-        # Intel / Rosetta 2 Homebrew
-        "/usr/local/bin/magick",
-        "/usr/local/bin/convert",
-        # MacPorts
-        "/opt/local/bin/magick",
-        "/opt/local/bin/convert",
-    )
+    """Detects and inspects system ImageMagick installation across macOS, Windows, and Linux."""
 
     def __init__(self, override_path: Optional[str] = None):
         self._override_path = Path(override_path) if override_path else None
         self._cached_info: Optional[ImageMagickInfo] = None
+        self.system = platform.system()  # 'Darwin', 'Windows', 'Linux'
 
     def get_info(self, force_refresh: bool = False) -> ImageMagickInfo:
         """Returns detected ImageMagick metadata, caching after first run."""
@@ -60,23 +49,31 @@ class ImageMagickDetector:
 
         binary_path = self._find_binary()
         if not binary_path:
+            install_hint = self._get_install_hint()
             self._cached_info = ImageMagickInfo(
                 is_available=False,
+                os_name=self._get_canonical_os_name(),
                 error_message=(
-                    "ImageMagick binary not found. Please install it using Homebrew:\n"
-                    "brew install imagemagick"
+                    f"ImageMagick binary not found on {self._get_canonical_os_name()}.\n\n"
+                    f"{install_hint}"
                 ),
             )
             return self._cached_info
 
         # Validate by executing `magick -version`
         try:
+            # Prevent console window flash on Windows
+            extra_kwargs = {}
+            if self.system == "Windows":
+                extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
             result = subprocess.run(
                 [str(binary_path), "-version"],
                 capture_output=True,
                 text=True,
                 check=True,
-                timeout=5.0,
+                timeout=8.0,
+                **extra_kwargs,
             )
             stdout = result.stdout
 
@@ -92,11 +89,17 @@ class ImageMagickDetector:
                 except (ValueError, IndexError):
                     major_ver = 0
 
-            # Detect architecture from version output or platform
-            is_arm = "aarch64" in stdout or "arm64" in stdout or platform.machine() == "arm64"
-            arch_str = "arm64 (Apple Silicon)" if is_arm else "x86_64"
+            # Architecture detection
+            mach = platform.machine().lower()
+            is_arm = "arm64" in mach or "aarch64" in mach or "aarch64" in stdout or "arm64" in stdout
+            if self.system == "Darwin":
+                arch_str = "Apple Silicon (arm64)" if is_arm else "Intel (x86_64)"
+            elif self.system == "Windows":
+                arch_str = "Windows ARM64" if is_arm else "Windows x64"
+            else:
+                arch_str = f"Linux {mach}"
 
-            # Parse delegates (supported image codecs: heic, webp, jpeg, png, etc.)
+            # Parse delegates (codecs: jpeg, png, webp, heic, tiff, etc.)
             delegates: List[str] = []
             delegates_match = re.search(r"Delegates\s+\(built-in\):\s*(.+)", stdout)
             if delegates_match:
@@ -108,6 +111,7 @@ class ImageMagickDetector:
                 version_string=version_str,
                 major_version=major_ver,
                 architecture=arch_str,
+                os_name=self._get_canonical_os_name(),
                 is_arm64=is_arm,
                 supported_delegates=delegates,
             )
@@ -117,6 +121,7 @@ class ImageMagickDetector:
             self._cached_info = ImageMagickInfo(
                 is_available=False,
                 binary_path=binary_path,
+                os_name=self._get_canonical_os_name(),
                 error_message=f"Failed to execute ImageMagick binary at '{binary_path}': {exc}",
             )
             return self._cached_info
@@ -124,27 +129,102 @@ class ImageMagickDetector:
             self._cached_info = ImageMagickInfo(
                 is_available=False,
                 binary_path=binary_path,
+                os_name=self._get_canonical_os_name(),
                 error_message=f"Unexpected error inspecting ImageMagick: {exc}",
             )
             return self._cached_info
 
     def _find_binary(self) -> Optional[Path]:
-        """Locates the binary using explicit paths, override, or PATH lookup."""
+        """Locates the binary using platform-specific candidate paths or PATH lookup."""
         if self._override_path and self._override_path.is_file() and os.access(self._override_path, os.X_OK):
             return self._override_path
 
-        # 1. Check known candidates (Apple Silicon Homebrew first)
-        for candidate in self.CANDIDATE_PATHS:
-            p = Path(candidate)
-            if p.is_file() and os.access(p, os.X_OK):
-                return p
-
-        # 2. Check system PATH via shutil.which
-        for name in ("magick", "convert"):
+        # 1. System PATH lookup via shutil.which (highest portability)
+        target_names = ["magick", "magick.exe", "convert", "convert.exe"]
+        for name in target_names:
             found = shutil.which(name)
             if found:
                 p = Path(found)
-                if p.is_file() and os.access(p, os.X_OK):
+                # On Windows, skip system convert.exe (FAT->NTFS utility)
+                if self.system == "Windows" and "system32" in str(p).lower() and p.name.lower() == "convert.exe":
+                    continue
+                if p.is_file() and (self.system == "Windows" or os.access(p, os.X_OK)):
                     return p
 
+        # 2. Platform-specific known candidate paths
+        candidates = self._get_platform_candidates()
+        for candidate in candidates:
+            p = Path(candidate)
+            if p.is_file() and (self.system == "Windows" or os.access(p, os.X_OK)):
+                return p
+
         return None
+
+    def _get_platform_candidates(self) -> List[str]:
+        """Returns prioritized candidate paths tailored to the host OS."""
+        candidates: List[str] = []
+
+        if self.system == "Darwin":
+            candidates.extend([
+                # Apple Silicon Homebrew
+                "/opt/homebrew/bin/magick",
+                "/opt/homebrew/bin/convert",
+                # Intel Homebrew
+                "/usr/local/bin/magick",
+                "/usr/local/bin/convert",
+                # MacPorts
+                "/opt/local/bin/magick",
+                "/opt/local/bin/convert",
+            ])
+
+        elif self.system == "Windows":
+            # Search common Windows Program Files installation directories
+            for pf_env in ("ProgramFiles", "ProgramFiles(x86)", "LOCALAPPDATA"):
+                base = os.environ.get(pf_env)
+                if base:
+                    matches = glob.glob(os.path.join(base, "ImageMagick*", "magick.exe"))
+                    candidates.extend(matches)
+            # Chocolatey or scoop paths
+            candidates.extend([
+                r"C:\Program Files\ImageMagick-7\magick.exe",
+                r"C:\ProgramData\chocolatey\bin\magick.exe",
+                os.path.expanduser(r"~\scoop\apps\imagemagick\current\magick.exe"),
+            ])
+
+        elif self.system == "Linux":
+            candidates.extend([
+                "/usr/bin/magick",
+                "/usr/local/bin/magick",
+                "/usr/bin/convert",
+                "/usr/local/bin/convert",
+                "/snap/bin/imagemagick",
+            ])
+
+        return candidates
+
+    def _get_canonical_os_name(self) -> str:
+        if self.system == "Darwin":
+            return "macOS"
+        elif self.system == "Windows":
+            return "Windows"
+        elif self.system == "Linux":
+            return "Linux"
+        return self.system
+
+    def _get_install_hint(self) -> str:
+        """Returns helpful installation commands tailored to current OS."""
+        if self.system == "Darwin":
+            return "Install via Homebrew: brew install imagemagick"
+        elif self.system == "Windows":
+            return (
+                "Install via Windows Package Manager: winget install ImageMagick.ImageMagick\n"
+                "or download the installer from: https://imagemagick.org/script/download.php"
+            )
+        elif self.system == "Linux":
+            return (
+                "Install via your package manager:\n"
+                "  Debian/Ubuntu: sudo apt install imagemagick\n"
+                "  Arch Linux:    sudo pacman -S imagemagick\n"
+                "  Fedora:        sudo dnf install ImageMagick"
+            )
+        return "Please install ImageMagick 7 from https://imagemagick.org"

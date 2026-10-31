@@ -1,15 +1,22 @@
-"""Main Application Window built with CustomTkinter.
+"""Cross-Platform Application Window built with CustomTkinter.
 
-Provides native macOS aesthetic, dark/light mode toggle, drag-and-drop input,
+Provides native aesthetic, dark/light mode toggle, drag-and-drop input,
 parameter controls (2x/3x/4x, aspect ratios, Lanczos/Cubic filters),
-real-time progress feedback, thread-safe asynchronous execution, and logging.
+real-time progress feedback, thread-safe asynchronous execution, and logging
+across macOS, Windows, and Linux.
+
+Author: Nugi Tiartanto (@nugitiar)
+Role:   Informatics Student & Independent Software Developer
+GitHub: https://github.com/nugitiar
 """
 
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 import os
 from pathlib import Path
+import platform
 import subprocess
+import sys
 import time
 from typing import List, Optional, Set
 import customtkinter as ctk
@@ -33,16 +40,18 @@ from .components import DropZone, LogViewer, StatBadge
 from .dnd_handler import HAS_TKINTERDND, TkinterDnD_Class
 
 
-# Set default appearance to match macOS system preference
+# Set default appearance to match system preference
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
 
 class AppWindow(ctk.CTk, TkinterDnD_Class if HAS_TKINTERDND else object):
-    """The primary desktop GUI window for macOS Batch Image Resizer."""
+    """The primary desktop GUI window for Cross-Platform Batch Image Resizer."""
 
-    def __init__(self):
+    def __init__(self, os_name: Optional[str] = None):
         super().__init__()
+
+        self.os_name = os_name or ("macOS" if platform.system() == "Darwin" else platform.system())
 
         # Try initializing TkinterDnD backend if available
         if HAS_TKINTERDND:
@@ -53,7 +62,7 @@ class AppWindow(ctk.CTk, TkinterDnD_Class if HAS_TKINTERDND else object):
                 pass
 
         # Window Configuration
-        self.title("Batch Image Upscaler & Resizer — macOS Apple Silicon")
+        self.title("Batch Image Resizer & Upscaler — Cross-Platform (macOS / Windows / Linux)")
         self.geometry("1060x820")
         self.minsize(940, 720)
 
@@ -99,7 +108,7 @@ class AppWindow(ctk.CTk, TkinterDnD_Class if HAS_TKINTERDND else object):
 
         subtitle_lbl = ctk.CTkLabel(
             title_box,
-            text="Native Apple Silicon (arm64) • ImageMagick CLI Execution Engine",
+            text=f"{self.os_name} Edition • Created by Nugi Tiartanto (@nugitiar) • ImageMagick CLI",
             font=ctk.CTkFont(size=12),
             text_color=("#64748B", "#94A3B8"),
         )
@@ -328,11 +337,10 @@ class AppWindow(ctk.CTk, TkinterDnD_Class if HAS_TKINTERDND else object):
             state="disabled",
             command=self._cancel_batch,
         )
-        self.cancel_btn.grid(row=0, column=1, padx=(0, 10))
-
+        reveal_label = "Reveal in Finder" if self.os_name == "macOS" else ("Reveal in Explorer" if self.os_name == "Windows" else "Open Output Folder")
         self.reveal_btn = ctk.CTkButton(
             act_header,
-            text="Reveal Output in Finder",
+            text=reveal_label,
             font=ctk.CTkFont(size=12),
             height=36,
             fg_color="transparent",
@@ -383,25 +391,25 @@ class AppWindow(ctk.CTk, TkinterDnD_Class if HAS_TKINTERDND else object):
     def _update_magick_status_badge(self) -> None:
         """Refreshes the top-bar ImageMagick status pill."""
         if self.im_info.is_available:
-            arch = "arm64" if self.im_info.is_arm64 else "x86_64"
+            arch = self.im_info.architecture or ("arm64" if self.im_info.is_arm64 else "x86_64")
             self.magick_badge.configure(
-                text=f"● ImageMagick {self.im_info.version_string} ({arch})",
+                text=f"● ImageMagick {self.im_info.version_string} ({self.os_name})",
                 fg_color=("#DCFCE7", "#064E3B"),
                 text_color=("#15803D", "#6EE7B7"),
             )
             self.log_viewer.append_log(
                 "INFO",
-                f"ImageMagick detected: {self.im_info.binary_path} [{arch}]",
+                f"ImageMagick detected on {self.os_name}: {self.im_info.binary_path} [{arch}]",
             )
         else:
             self.magick_badge.configure(
-                text="✗ ImageMagick Not Found",
+                text=f"✗ ImageMagick Not Found ({self.os_name})",
                 fg_color=("#FEE2E2", "#7F1D1D"),
                 text_color=("#B91C1C", "#FCA5A5"),
             )
             self.log_viewer.append_log(
                 "ERROR",
-                "ImageMagick CLI not detected. Run 'brew install imagemagick'.",
+                f"ImageMagick CLI not detected. {self.detector._get_install_hint()}",
             )
 
     def _on_theme_change(self, choice: str) -> None:
@@ -559,8 +567,8 @@ class AppWindow(ctk.CTk, TkinterDnD_Class if HAS_TKINTERDND else object):
         if not self.im_info.is_available:
             messagebox.showerror(
                 "ImageMagick Required",
-                "ImageMagick is not available on this Mac.\n\n"
-                "Install it via Terminal:\nbrew install imagemagick",
+                f"ImageMagick is not available on this {self.os_name} system.\n\n"
+                f"{self.detector._get_install_hint()}",
             )
             return
 
@@ -595,13 +603,27 @@ class AppWindow(ctk.CTk, TkinterDnD_Class if HAS_TKINTERDND else object):
             self.current_worker.cancel()
 
     def _reveal_in_finder(self) -> None:
-        """Opens the output directory in macOS Finder."""
+        """Opens the output directory in native file manager (Finder / Explorer / File Manager)."""
         target = self.output_dir or (self.input_dir.parent if self.input_dir else None)
-        if target:
-            target.mkdir(parents=True, exist_ok=True)
-            subprocess.run(["open", str(target)])
-        else:
-            messagebox.showinfo("Finder", "No active output folder selected yet.")
+        if not target:
+            messagebox.showinfo("File Manager", "No active output folder selected yet.")
+            return
+
+        target.mkdir(parents=True, exist_ok=True)
+        target_str = str(target.resolve())
+
+        try:
+            if sys.platform == "darwin":
+                subprocess.run(["open", target_str])
+            elif sys.platform == "win32":
+                if hasattr(os, "startfile"):
+                    os.startfile(target_str)
+                else:
+                    subprocess.run(["explorer", target_str])
+            else:
+                subprocess.run(["xdg-open", target_str])
+        except Exception as exc:
+            self.log_viewer.append_log("WARNING", f"Could not open directory in file manager: {exc}")
 
     # ==========================================================================
     # Thread-Safe UI Update Callbacks (Scheduled via self.after)

@@ -1,4 +1,9 @@
-"""Reusable CustomTkinter UI components with native macOS aesthetic."""
+"""Reusable CustomTkinter UI components for Windows, macOS, and Linux.
+
+Author: Nugi Tiartanto (@nugitiar)
+Role:   Informatics Student & Independent Software Developer
+GitHub: https://github.com/nugitiar
+"""
 
 import datetime
 from pathlib import Path
