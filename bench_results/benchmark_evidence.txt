@@ -1,7 +1,7 @@
 ============================================================================
 BENCHMARK EVIDENCE LOG — BATCH IMAGE RESIZER
 ============================================================================
-Date & Time:       2026-10-31 01:05:53
+Date & Time:       2026-10-31 01:25:52
 Author / Creator:  Nugi Tiartanto (@nugitiar)
 Repository:        https://github.com/nugitiar/batch-image-resizer
 Operating System:  Darwin 27.0.0 (arm64)
@@ -15,15 +15,15 @@ RANGKUMAN HASIL PENGUJIAN EMPIRIS NYATA (WALL-CLOCK TIME):
 ----------------------------------------------------------------------------
 Batch Size   | Single-Thread (1w) | Multi-Thread (4w)  | Multi-Thread (8w) 
 ----------------------------------------------------------------------------
-10 Citra     |   7.21s (1.00x)     |   2.73s (2.64x)     |   5.19s (1.39x)
-50 Citra     |  33.41s (1.00x)     |  11.68s (2.86x)     |  11.86s (2.82x)
+10 Citra     |   6.66s (1.00x)     |   2.80s (2.37x)     |   2.83s (2.35x)
+50 Citra     |  32.44s (1.00x)     |  10.91s (2.97x)     |   9.54s (3.40x)
 ----------------------------------------------------------------------------
 
 DETAIL LENGKAP PENGUJIAN 50 CITRA:
-• Single-Thread (1 Worker) : 33.41 detik (Baseline 1.00x)
-• Multi-Thread  (2 Workers): 18.10 detik (Speedup: 1.85x | Efisiensi: 92.3%)
-• Multi-Thread  (4 Workers): 11.68 detik (Speedup: 2.86x | Efisiensi: 71.5%)
-• Multi-Thread  (8 Workers): 11.86 detik (Speedup: 2.82x | Efisiensi: 35.2%)
+• Single-Thread (1 Worker) : 32.44 detik (Baseline 1.00x)
+• Multi-Thread  (2 Workers): 17.80 detik (Speedup: 1.82x | Efisiensi: 91.1%)
+• Multi-Thread  (4 Workers): 10.91 detik (Speedup: 2.97x | Efisiensi: 74.4%)
+• Multi-Thread  (8 Workers): 9.54 detik (Speedup: 3.40x | Efisiensi: 42.5%)
 
 KONSISTENSI & VALIDASI:
 • Semua 50 berkas citra berhasil diproses 100% tanpa error.
